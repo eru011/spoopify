@@ -27,26 +27,21 @@ def search_youtube(query, max_results=5):
         st.error("Failed to fetch YouTube results. Please check your API key.")
         return []
 
-def download_video_to_temp(url, save_directory):
-    """Download the best audio to a specified directory and return the file path."""
-    output_file = os.path.join(save_directory, '%(title)s.%(ext)s')
+def download_video_to_temp(url):
+    """Download the best audio to a temporary directory and return the file path."""
+    temp_dir = tempfile.mkdtemp()  # Temporary directory for downloaded files
+    output_file = os.path.join(temp_dir, '%(title)s.%(ext)s')
 
     ydl_opts = {
         'format': 'bestaudio/best',
         'outtmpl': output_file,
         'quiet': True,
-        'postprocessors': [{
-            'key': 'FFmpegAudioConvertor',
-            'preferredcodec': 'mp3',
-            'preferredquality': '192',
-        }],
     }
 
     with ytdl.YoutubeDL(ydl_opts) as ydl:
         ydl.download([url])
 
-    # Get the downloaded file
-    downloaded_file = next(Path(save_directory).glob("*.mp3"))  # Only mp3 files
+    downloaded_file = next(Path(temp_dir).glob("*"))  # Get the first file in the directory
     return downloaded_file
 
 # Initialize session state for storing downloaded files
@@ -66,14 +61,6 @@ if page == "Home":
         Search for high-quality audio from YouTube videos. 
         Simply type a topic below to get started.
         """
-    )
-
-    # Sidebar for settings
-    default_directory = str(Path.home() / "Downloads")
-    directory = st.sidebar.text_input(
-        "Save Directory:", 
-        value=default_directory, 
-        placeholder="Enter the directory to save the file"
     )
 
     # Search input
@@ -98,7 +85,7 @@ if page == "Home":
                     video_url = f"https://www.youtube.com/watch?v={video_id}"
                     try:
                         with st.spinner("Downloading audio... Please wait."):
-                            downloaded_file = download_video_to_temp(video_url, directory)
+                            downloaded_file = download_video_to_temp(video_url)
                             st.session_state.downloaded_files.append(downloaded_file)  # Add to session state
                             st.success(f"Audio from '{title}' downloaded!")
                     except Exception as e:
