@@ -11,17 +11,19 @@ def download_video_to_temp(url):
     output_file = os.path.join(temp_dir, '%(title)s.%(ext)s')
     
     ydl_opts = {
-        'format': 'bestaudio/best',
-        'outtmpl': output_file,
-        'quiet': True,
-        'postprocessors': [
-            {   # Convert audio to MP3
-                'key': 'FFmpegExtractAudio',
-                'preferredcodec': 'mp3',
-                'preferredquality': '192',
-            }
-        ],
-    }
+    'format': 'bestaudio/best',
+    'outtmpl': output_file,
+    'quiet': True,
+    'ffmpeg_location': '/usr/bin/ffmpeg',  # Default path on Streamlit Cloud
+    'postprocessors': [
+        {   # Convert audio to MP3
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': 'mp3',
+            'preferredquality': '192',
+        }
+    ],
+}
+
     
     with ytdl.YoutubeDL(ydl_opts) as ydl:
         ydl.download([url])
