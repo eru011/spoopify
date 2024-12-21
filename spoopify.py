@@ -6,7 +6,7 @@ import tempfile
 import shutil
 
 def download_video_to_temp(url):
-    """Download the best audio to a temporary directory and return the file path."""
+    """Download the best audio in MP3 format to a temporary directory and return the file path."""
     temp_dir = tempfile.mkdtemp()
     output_file = os.path.join(temp_dir, '%(title)s.%(ext)s')
     
@@ -14,13 +14,21 @@ def download_video_to_temp(url):
         'format': 'bestaudio/best',
         'outtmpl': output_file,
         'quiet': True,
+        'postprocessors': [
+            {   # Convert audio to MP3
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'mp3',
+                'preferredquality': '192',
+            }
+        ],
     }
     
     with ytdl.YoutubeDL(ydl_opts) as ydl:
         ydl.download([url])
     
-    downloaded_file = next(Path(temp_dir).glob("*"))
+    downloaded_file = next(Path(temp_dir).glob("*.mp3"))  # Look specifically for the MP3 file
     return downloaded_file
+
 
 def move_file_to_directory(file_path, destination_directory):
     """Move a file to a specified directory."""
