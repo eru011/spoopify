@@ -27,21 +27,27 @@ def search_youtube(query, max_results=5):
         st.error("Failed to fetch YouTube results. Please check your API key.")
         return []
 
-def download_video_to_temp(url):
-    """Download the best audio to a temporary directory and return the file path."""
+def download_video_to_temp(url, title):
+    """Download the best audio to a temporary directory, convert to MP3, and return the file path."""
     temp_dir = tempfile.mkdtemp()  # Temporary directory for downloaded files
-    output_file = os.path.join(temp_dir, '%(title)s.%(ext)s')
+    output_file = os.path.join(temp_dir, f'{title}.mp3')  # Use title for file name, ensure mp3 extension
 
     ydl_opts = {
         'format': 'bestaudio/best',
-        'outtmpl': output_file,
+        'outtmpl': output_file,  # Save as MP3 with the title
         'quiet': True,
+        'postprocessors': [{
+            'key': 'FFmpegAudioConvertor',
+            'preferredcodec': 'mp3',
+            'preferredquality': '192',
+        }],
     }
 
     with ytdl.YoutubeDL(ydl_opts) as ydl:
         ydl.download([url])
 
-    downloaded_file = next(Path(temp_dir).glob("*"))  # Get the first file in the directory
+    # Return the file with the proper name
+    downloaded_file = Path(output_file)
     return downloaded_file
 
 # Initialize session state for storing downloaded files
@@ -85,7 +91,7 @@ if page == "Home":
                     video_url = f"https://www.youtube.com/watch?v={video_id}"
                     try:
                         with st.spinner("Downloading audio... Please wait."):
-                            downloaded_file = download_video_to_temp(video_url)
+                            downloaded_file = download_video_to_temp(video_url, title)
                             st.session_state.downloaded_files.append(downloaded_file)  # Add to session state
                             st.success(f"Audio from '{title}' downloaded!")
                     except Exception as e:
@@ -115,6 +121,6 @@ elif page == "Play Song":
 
     else:
         st.info("No songs available. Download a song first!")
-        
+
 # Footer
 st.markdown("---")
