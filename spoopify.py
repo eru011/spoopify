@@ -35,66 +35,51 @@ st.set_page_config(page_title="YouTube Audio Downloader", page_icon="🎵", layo
 st.title("🎵 YouTube Audio Downloader")
 st.markdown(
     """
-    Download high-quality audio from YouTube videos effortlessly! 
-    Use the tabs below to download audio or play your favorite tracks.
+    Download high-quality audio from YouTube videos effortlessly! Simply paste the video URL, and choose whether to play, save, or download the file.
     """
 )
 
-# Sidebar for settings
+# Sidebar for navigation
 st.sidebar.header("Settings")
 default_directory = str(Path.home() / "Downloads")
 directory = st.sidebar.text_input("💾 Save Directory:", value=default_directory, placeholder="Enter the directory to save the file")
 
-# Tabs for Downloading and Playing
-tab1, tab2 = st.tabs(["Download Audio", "Play Audio"])
+# Main content area
+st.divider()
+url = st.text_input("🎥 Enter the YouTube URL:", placeholder="e.g., https://www.youtube.com/watch?v=example")
 
-# Download Tab
-with tab1:
-    st.subheader("Download Audio from YouTube")
-    url = st.text_input("🎥 Enter the YouTube URL:", placeholder="e.g., https://www.youtube.com/watch?v=example")
+if st.button("🚀 Download and Play Audio"):
+    if not url.strip():
+        st.error("❌ Please enter a valid YouTube URL.")
+    else:
+        try:
+            with st.spinner("Downloading audio... Please wait."):
+                downloaded_file = download_video_to_temp(url)
+            
+            st.success("✅ Download complete! Choose an action below.")
+            
+            # Provide an option to play the audio
+            st.audio(str(downloaded_file), format="audio/mpeg", start_time=0)
 
-    if st.button("🚀 Download and Play Audio"):
-        if not url.strip():
-            st.error("❌ Please enter a valid YouTube URL.")
-        else:
-            try:
-                with st.spinner("Downloading audio... Please wait."):
-                    downloaded_file = download_video_to_temp(url)
-                
-                st.success("✅ Download complete! Choose an action below.")
-                
-                # Provide an option to play the audio
-                st.audio(str(downloaded_file), format="audio/mpeg", start_time=0)
+            # Provide action buttons
+            col3, col4 = st.columns(2)
 
-                # Provide action buttons
-                col3, col4 = st.columns(2)
+            with col3:
+                if st.button("📂 Move File to Directory"):
+                    moved_file = move_file_to_directory(downloaded_file, directory)
+                    st.success(f"✅ File moved to: {moved_file}")
 
-                with col3:
-                    if st.button("📂 Move File to Directory"):
-                        moved_file = move_file_to_directory(downloaded_file, directory)
-                        st.success(f"✅ File moved to: {moved_file}")
+            with col4:
+                with open(downloaded_file, "rb") as file:
+                    st.download_button(
+                        label="⬇️ Download Audio File",
+                        data=file,
+                        file_name=os.path.basename(downloaded_file),
+                        mime="audio/mpeg"
+                    )
 
-                with col4:
-                    with open(downloaded_file, "rb") as file:
-                        st.download_button(
-                            label="⬇️ Download Audio File",
-                            data=file,
-                            file_name=os.path.basename(downloaded_file),
-                            mime="audio/mpeg"
-                        )
-
-            except Exception as e:
-                st.error(f"❌ An error occurred: {str(e)}")
-
-# Play Tab
-with tab2:
-    st.subheader("Play Your Audio Files")
-    audio_files = st.file_uploader("Upload your audio files (MP3 format)", type=["mp3"], accept_multiple_files=True)
-
-    if audio_files:
-        for audio_file in audio_files:
-            st.audio(audio_file, format="audio/mpeg", start_time=0)
-            st.write(f"Now playing: {audio_file.name}")
+        except Exception as e:
+            st.error(f"❌ An error occurred: {str(e)}")
 
 # Footer
 st.markdown("---")
