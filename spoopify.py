@@ -3,51 +3,98 @@ import os
 import streamlit as st
 from pathlib import Path
 import tempfile
+import shutil
 
 def download_video_to_temp(url):
     """Download the best audio to a temporary directory and return the file path."""
-    # Create a temporary directory
     temp_dir = tempfile.mkdtemp()
     output_file = os.path.join(temp_dir, '%(title)s.%(ext)s')
     
-    # yt-dlp options
     ydl_opts = {
         'format': 'bestaudio/best',
         'outtmpl': output_file,
-        'quiet': True,  # Suppress output
+        'quiet': True,
     }
     
     with ytdl.YoutubeDL(ydl_opts) as ydl:
         ydl.download([url])
     
-    # Get the downloaded file path
     downloaded_file = next(Path(temp_dir).glob("*"))
     return downloaded_file
 
+def move_file_to_directory(file_path, destination_directory):
+    """Move a file to a specified directory."""
+    if not os.path.exists(destination_directory):
+        os.makedirs(destination_directory)
+    destination_path = os.path.join(destination_directory, os.path.basename(file_path))
+    shutil.move(file_path, destination_path)
+    return destination_path
+
 # Streamlit app interface
-st.title("YouTube Audio Downloader")
-st.write("Download high-quality audio from YouTube videos.")
+st.set_page_config(page_title="YouTube Audio Downloader", page_icon="🎵", layout="wide")
+st.title("🎵 YouTube Audio Downloader")
+st.markdown(
+    """
+    Download high-quality audio from YouTube videos effortlessly! 
+    Use the tabs below to download audio or play your favorite tracks.
+    """
+)
 
-# Input field for URL
-url = st.text_input("Enter the YouTube URL:")
+# Sidebar for settings
+st.sidebar.header("Settings")
+default_directory = str(Path.home() / "Downloads")
+directory = st.sidebar.text_input("💾 Save Directory:", value=default_directory, placeholder="Enter the directory to save the file")
 
-if st.button("Download Audio"):
-    if not url.strip():
-        st.error("Please enter a valid YouTube URL.")
-    else:
-        try:
-            st.info("Downloading audio...")
-            downloaded_file = download_video_to_temp(url)
-            
-            st.success("Download complete! You can now download the file to your device.")
-            
-            # Provide a download button for the file
-            with open(downloaded_file, "rb") as file:
-                st.download_button(
-                    label="Download Audio File",
-                    data=file,
-                    file_name=os.path.basename(downloaded_file),
-                    mime="audio/mpeg"
-                )
-        except Exception as e:
-            st.error(f"An error occurred: {str(e)}")
+# Tabs for Downloading and Playing
+tab1, tab2 = st.tabs(["Download Audio", "Play Audio"])
+
+# Download Tab
+with tab1:
+    st.subheader("Download Audio from YouTube")
+    url = st.text_input("🎥 Enter the YouTube URL:", placeholder="e.g., https://www.youtube.com/watch?v=example")
+
+    if st.button("🚀 Download and Play Audio"):
+        if not url.strip():
+            st.error("❌ Please enter a valid YouTube URL.")
+        else:
+            try:
+                with st.spinner("Downloading audio... Please wait."):
+                    downloaded_file = download_video_to_temp(url)
+                
+                st.success("✅ Download complete! Choose an action below.")
+                
+                # Provide an option to play the audio
+                st.audio(str(downloaded_file), format="audio/mpeg", start_time=0)
+
+                # Provide action buttons
+                col3, col4 = st.columns(2)
+
+                with col3:
+                    if st.button("📂 Move File to Directory"):
+                        moved_file = move_file_to_directory(downloaded_file, directory)
+                        st.success(f"✅ File moved to: {moved_file}")
+
+                with col4:
+                    with open(downloaded_file, "rb") as file:
+                        st.download_button(
+                            label="⬇️ Download Audio File",
+                            data=file,
+                            file_name=os.path.basename(downloaded_file),
+                            mime="audio/mpeg"
+                        )
+
+            except Exception as e:
+                st.error(f"❌ An error occurred: {str(e)}")
+
+# Play Tab
+with tab2:
+    st.subheader("Play Your Audio Files")
+    audio_files = st.file_uploader("Upload your audio files (MP3 format)", type=["mp3"], accept_multiple_files=True)
+
+    if audio_files:
+        for audio_file in audio_files:
+            st.audio(audio_file, format="audio/mpeg", start_time=0)
+            st.write(f"Now playing: {audio_file.name}")
+
+# Footer
+st.markdown("---")
