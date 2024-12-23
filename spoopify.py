@@ -85,7 +85,7 @@ if page == "Home":
     # Search input
     search_query = st.text_input(
         "Search YouTube:", 
-        placeholder="Type a topic to search for videos (e.g., 'lofi music')",
+        placeholder="Type a topic to search for videos (e.g., 'Bini')",
     )
 
     if search_query:
@@ -104,13 +104,19 @@ if page == "Home":
                     st.session_state.selected_video = video_id
                     st.session_state.selected_thumbnail = thumbnail_url
 
-            # Show thumbnail and download options for the selected video
+            
+        else:
+            st.error("No videos found. Please try a different query.")
+
+elif page == "Play Song":
+
+    # Show thumbnail and download options for the selected video
             if st.session_state.selected_video:
                 st.markdown("### Selected Video")
                 st.image(st.session_state.selected_thumbnail, width=400)
                 video_url = f"https://www.youtube.com/watch?v={st.session_state.selected_video}"
 
-                if st.button("Download Track"):
+                if st.button("Convert Track"):
                     try:
                         with st.spinner("Preparing your track..."):
                             downloaded_file = download_video_to_temp(video_url)
@@ -140,53 +146,6 @@ if page == "Home":
 
                     except Exception as e:
                         st.error(f"An error occurred: {str(e)}")
-        else:
-            st.error("No videos found. Please try a different query.")
-
-elif page == "Play Song":
-    # Page for playing the song
-    st.markdown("### Play Your Favorite Songs")
-
-    # Display the list of MP3 and WEBM files in the download directory
-    download_dir = Path.home() / "Downloads"
-    audio_files = list(download_dir.glob("*.mp3")) + list(download_dir.glob("*.webm"))
-
-    if audio_files:
-        # Sort files by modification time (newest first)
-        audio_files = sorted(audio_files, key=lambda x: x.stat().st_mtime, reverse=True)
-
-        # Search bar for filtering songs
-        search_term = st.text_input("Search songs:", placeholder="Search by file name")
-
-        if search_term:
-            audio_files = [file for file in audio_files if search_term.lower() in file.name.lower()]
-
-        # Scrollable container for the list of songs
-      
-
-        # Use a scrollable container
-        st.markdown('<div class="scrollable-container">', unsafe_allow_html=True)
-
-        # Render the list of songs as a form (interactive elements)
-        with st.form("song_list_form"):
-            selected_file = st.radio(
-                "Available Songs:",
-                [file.name for file in audio_files],
-                key="song_selector"
-            )
-            # Add a submit button for the form
-            submitted = st.form_submit_button("Play Selected")
-
-        st.markdown('</div>', unsafe_allow_html=True)
-
-        if submitted and selected_file:
-            file_path = download_dir / selected_file
-
-            # Audio player
-            st.markdown("### Now Playing")
-            st.audio(str(file_path), format="audio/mpeg", start_time=0)
-    else:
-        st.info("No audio files (.mp3 or .webm) found in the Downloads folder. Download some tracks first!")
-
+   
 # Footer
 st.markdown("---")
