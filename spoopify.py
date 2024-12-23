@@ -66,7 +66,7 @@ if page == "Home":
     # Search input
     search_query = st.text_input(
         "Search YouTube:", 
-        placeholder="Type a topic to search for videos (e.g., 'lofi music')",
+        placeholder="Type a topic to search for videos (e.g., 'Bini')",
     )
 
     if search_query:
