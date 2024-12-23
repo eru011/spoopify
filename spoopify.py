@@ -113,7 +113,7 @@ if st.session_state.current_page == "Home":
                 if st.button(f"Select '{title}'", key=video_id):
                     st.session_state.selected_video = video_id
                     st.session_state.selected_thumbnail = thumbnail_url
-                    navigate_to("Play Song")
+                    st.info("Video selected! Please go to the Play Song tab.")
         else:
             st.error("No videos found. Please try a different query.")
 
