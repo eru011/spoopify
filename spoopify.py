@@ -59,13 +59,23 @@ if "selected_video" not in st.session_state:
 if "selected_thumbnail" not in st.session_state:
     st.session_state.selected_thumbnail = None
 
+if "current_page" not in st.session_state:
+    st.session_state.current_page = "Home"
+
+# Navigation function
+def navigate_to(page):
+    st.session_state.current_page = page
+
 # Main layout 
 st.title("YouTube Audio Downloader")
 
 # Sidebar for navigation
-page = st.sidebar.radio("Select a page:", ["Home", "Play Song"])
+page = st.sidebar.radio("Select a page:", ["Home", "Play Song"], index=["Home", "Play Song"].index(st.session_state.current_page))
 
-if page == "Home":
+if page != st.session_state.current_page:
+    navigate_to(page)
+
+if st.session_state.current_page == "Home":
     # Home page for searching and downloading
     st.markdown(
         """
@@ -103,49 +113,48 @@ if page == "Home":
                 if st.button(f"Select '{title}'", key=video_id):
                     st.session_state.selected_video = video_id
                     st.session_state.selected_thumbnail = thumbnail_url
-
-            
+                    navigate_to("Play Song")
         else:
             st.error("No videos found. Please try a different query.")
 
-elif page == "Play Song":
+elif st.session_state.current_page == "Play Song":
 
     # Show thumbnail and download options for the selected video
-            if st.session_state.selected_video:
-                st.markdown("### Selected Video")
-                st.image(st.session_state.selected_thumbnail, width=400)
-                video_url = f"https://www.youtube.com/watch?v={st.session_state.selected_video}"
+    if st.session_state.selected_video:
+        st.markdown("### Selected Video")
+        st.image(st.session_state.selected_thumbnail, width=400)
+        video_url = f"https://www.youtube.com/watch?v={st.session_state.selected_video}"
 
-                if st.button("Convert Track"):
-                    try:
-                        with st.spinner("Preparing your track..."):
-                            downloaded_file = download_video_to_temp(video_url)
-                        
-                        st.success("Track ready! Choose your next move.")
-                        
-                        # Audio player
-                        st.markdown("### Now Playing")
-                        st.audio(str(downloaded_file), format="audio/mpeg", start_time=0)
+        if st.button("Convert Track"):
+            try:
+                with st.spinner("Preparing your track..."):
+                    downloaded_file = download_video_to_temp(video_url)
+                
+                st.success("Track ready! Choose your next move.")
+                
+                # Audio player
+                st.markdown("### Now Playing")
+                st.audio(str(downloaded_file), format="audio/mpeg", start_time=0)
 
-                        # Action buttons in columns
-                        col1, col2 = st.columns(2)
-                        with col1:
-                            if st.button("Save to Library", key="move_button"):
-                                moved_file = move_file_to_directory(downloaded_file, directory)
-                                st.success(f"Track saved to: {moved_file}")
+                # Action buttons in columns
+                col1, col2 = st.columns(2)
+                with col1:
+                    if st.button("Save to Library", key="move_button"):
+                        moved_file = move_file_to_directory(downloaded_file, directory)
+                        st.success(f"Track saved to: {moved_file}")
 
-                        with col2:
-                            with open(downloaded_file, "rb") as file:
-                                st.download_button(
-                                    label="⬇ Download Track",
-                                    data=file,
-                                    file_name=os.path.basename(downloaded_file),
-                                    mime="audio/mpeg",
-                                    key="download_file_button"
-                                )
+                with col2:
+                    with open(downloaded_file, "rb") as file:
+                        st.download_button(
+                            label="⬇ Download Track",
+                            data=file,
+                            file_name=os.path.basename(downloaded_file),
+                            mime="audio/mpeg",
+                            key="download_file_button"
+                        )
 
-                    except Exception as e:
-                        st.error(f"An error occurred: {str(e)}")
-   
+            except Exception as e:
+                st.error(f"An error occurred: {str(e)}")
+
 # Footer
 st.markdown("---")
