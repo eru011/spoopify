@@ -87,11 +87,11 @@ st.markdown("""
 
 # Horizontal navigation bar
 col1, col2 = st.columns([1, 3])  # Adjust the columns to create spacing
-with row1:
+with col1:
     if st.button("Home"):
         navigate_to("Home")
         st.rerun()
-with row2:
+with col2:
     if st.button("Play Song"):
         navigate_to("Play Song")
         st.rerun()
