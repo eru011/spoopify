@@ -74,11 +74,10 @@ st.markdown("""
     <style>
         .navbar {
             display: flex;
-            justify-content: center;
+            justify-content: space-around;
             background-color: #f0f0f0;
             padding: 10px;
             border-radius: 10px;
-            gap: 20px; /* Space between buttons */
         }
         .navbar button {
             width: 150px;
@@ -101,21 +100,21 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Horizontal navigation bar
-st.markdown('<div class="navbar">', unsafe_allow_html=True)
+col1, col2 = st.columns([1, 2])  # Adjust the columns to create spacing
 
 # Home Button
-home_button_class = "active" if st.session_state.current_page == "Home" else "inactive"
-if st.button("Home", key="home_button", help="Go to Home", on_click=navigate_to, args=("Home",), kwargs={}):
-    st.session_state.current_page = "Home"
-    st.rerun()
+with col1:
+    home_button_class = "active" if st.session_state.current_page == "Home" else "inactive"
+    if st.button("Home", key="home_button", help="Go to Home", on_click=navigate_to, args=("Home",), kwargs={}):
+        st.session_state.current_page = "Home"
+        st.rerun()
 
 # Play Song Button
-play_button_class = "active" if st.session_state.current_page == "Play Song" else "inactive"
-if st.button("Play Song", key="play_button", help="Go to Play Song", on_click=navigate_to, args=("Play Song",), kwargs={}):
-    st.session_state.current_page = "Play Song"
-    st.rerun()
-
-st.markdown('</div>', unsafe_allow_html=True)
+with col2:
+    play_button_class = "active" if st.session_state.current_page == "Play Song" else "inactive"
+    if st.button("Play Song", key="play_button", help="Go to Play Song", on_click=navigate_to, args=("Play Song",), kwargs={}):
+        st.session_state.current_page = "Play Song"
+        st.rerun()
 
 # Page content based on the current page
 if st.session_state.current_page == "Home":
@@ -178,7 +177,8 @@ elif st.session_state.current_page == "Play Song":
                 st.markdown("### Now Playing")
                 st.audio(str(downloaded_file), format="audio/mpeg", start_time=0)
 
-                # Action button for downloading the track
+                # Action buttons in columns
+            
                 with open(downloaded_file, "rb") as file:
                     st.download_button(
                         label="⬇ Download Track",
