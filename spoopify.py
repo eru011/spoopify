@@ -99,7 +99,7 @@ if st.session_state.current_page == "Home":
     )
 
     if search_query:
-    with st.spinner("Searching for videos..."):
+        with st.spinner("Searching for videos..."):
         results = search_youtube(search_query)
 
     if results:
