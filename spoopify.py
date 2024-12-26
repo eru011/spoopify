@@ -149,10 +149,14 @@ elif st.session_state.current_page == "Play Song":
                         st.success(f"Track saved to: {moved_file}")
 
                 with col2:
-                    # Generate HTML link for download
-                    download_url = f"file:///{downloaded_file}"  # Local file URL
-                    download_link = f'<a href="{download_url}" download="{os.path.basename(downloaded_file)}" target="_blank">⬇ Download Track</a>'
-                    st.markdown(download_link, unsafe_allow_html=True)
+                    with open(downloaded_file, "rb") as file:
+                        st.download_button(
+                            label="⬇ Download Track",
+                            data=file,
+                            file_name=os.path.basename(downloaded_file),
+                            mime="audio/mpeg",
+                            key="download_file_button"
+                        )
 
             except Exception as e:
                 st.error(f"An error occurred: {str(e)}")
