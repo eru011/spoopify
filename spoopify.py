@@ -114,6 +114,10 @@ if st.session_state.current_page == "Home":
                     st.session_state.selected_video = video_id
                     st.session_state.selected_thumbnail = thumbnail_url
                     st.info("Video selected! Please go to the Play Song tab.")
+
+                    # Automatically navigate to the "Play Song" tab
+                    navigate_to("Play Song")
+
         else:
             st.error("No videos found. Please try a different query.")
 
