@@ -86,7 +86,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Horizontal navigation bar
-col1, col2 = st.columns([1, 3])  # Adjust the columns to create spacing
+col1, col2 = st.columns([1, 2])  # Adjust the columns to create spacing
 with col1:
     if st.button("Home"):
         navigate_to("Home")
