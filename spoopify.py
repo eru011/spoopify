@@ -107,14 +107,14 @@ with col1:
     home_button_class = "active" if st.session_state.current_page == "Home" else "inactive"
     if st.button("Home", key="home_button", help="Go to Home", on_click=navigate_to, args=("Home",), kwargs={}):
         st.session_state.current_page = "Home"
-        st.experimental_rerun()
+        st.rerun()
 
 # Play Song Button
 with col2:
     play_button_class = "active" if st.session_state.current_page == "Play Song" else "inactive"
     if st.button("Play Song", key="play_button", help="Go to Play Song", on_click=navigate_to, args=("Play Song",), kwargs={}):
         st.session_state.current_page = "Play Song"
-        st.experimental_rerun()
+        st.rerun()
 
 # Page content based on the current page
 if st.session_state.current_page == "Home":
@@ -154,7 +154,7 @@ if st.session_state.current_page == "Home":
                     st.session_state.selected_thumbnail = thumbnail_url
                     st.info("Video selected! Please go to the Play Song tab.")
                     navigate_to("Play Song")
-                    st.experimental_rerun()
+                    st.rerun()
         else:
             st.error("No videos found. Please try a different query.")
 
@@ -197,7 +197,7 @@ elif st.session_state.current_page == "Play Song":
                 # Back button to return to the home page
                 if st.button("Back to Search"):
                     navigate_to("Home")
-                    st.experimental_rerun()
+                    st.rerun()
 
             except Exception as e:
                 st.error(f"An error occurred: {str(e)}")
