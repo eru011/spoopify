@@ -90,11 +90,11 @@ col1, col2 = st.columns([1, 3])  # Adjust the columns to create spacing
 with row1:
     if st.button("Home"):
         navigate_to("Home")
-        st.experimental_rerun()
+        st.rerun()
 with row2:
     if st.button("Play Song"):
         navigate_to("Play Song")
-        st.experimental_rerun()
+        st.rerun()
 
 if st.session_state.current_page == "Home":
     # Home page for searching and downloading
@@ -137,7 +137,7 @@ if st.session_state.current_page == "Home":
                     st.session_state.selected_thumbnail = thumbnail_url
                     st.info("Video selected! Please go to the Play Song tab.")
                     navigate_to("Play Song")
-                    st.experimental_rerun()
+                    st.rerun()
         else:
             st.error("No videos found. Please try a different query.")
 
@@ -180,7 +180,7 @@ elif st.session_state.current_page == "Play Song":
                 # Back button to return to the home page
                 if st.button("Back to Search"):
                     navigate_to("Home")
-                    st.experimental_rerun()
+                    st.rerun()
 
             except Exception as e:
                 st.error(f"An error occurred: {str(e)}")
