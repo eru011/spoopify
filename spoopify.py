@@ -155,7 +155,7 @@ elif st.session_state.current_page == "Play Song":
                         encoded_file = base64.b64encode(file.read()).decode("utf-8")
                         download_url = f"data:audio/mpeg;base64,{encoded_file}"
 
-                    # Generate a clickable link that opens in the browser for download
+                    # Provide a download link that opens in a new browser tab
                     st.markdown(f'<a href="{download_url}" target="_blank" download="{os.path.basename(downloaded_file)}">⬇ Download Track</a>', unsafe_allow_html=True)
 
             except Exception as e:
