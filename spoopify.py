@@ -5,6 +5,7 @@ from pathlib import Path
 import tempfile
 import shutil
 import requests
+import base64
 
 # Load YouTube API key from Streamlit secrets
 YOUTUBE_API_KEY = st.secrets["youtube"]["api_key"]
@@ -149,9 +150,13 @@ elif st.session_state.current_page == "Play Song":
                         st.success(f"Track saved to: {moved_file}")
                 
                 with col2:
+                    # Generate base64 encoded data URL for the downloaded file
+                    with open(downloaded_file, "rb") as file:
+                        encoded_file = base64.b64encode(file.read()).decode("utf-8")
+                        download_url = f"data:audio/mpeg;base64,{encoded_file}"
+
                     # Generate a clickable link that opens in the browser for download
-                    download_url = f"data:audio/mpeg;base64,{open(downloaded_file, 'rb').read().encode('base64')}"
-                    st.markdown(f'<a href="{download_url}" target="_blank" download>⬇ Download Track</a>', unsafe_allow_html=True)
+                    st.markdown(f'<a href="{download_url}" target="_blank" download="{os.path.basename(downloaded_file)}">⬇ Download Track</a>', unsafe_allow_html=True)
 
             except Exception as e:
                 st.error(f"An error occurred: {str(e)}")
