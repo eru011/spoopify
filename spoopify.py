@@ -141,10 +141,6 @@ elif st.session_state.current_page == "Play Song":
                 st.markdown("### Now Playing")
                 st.audio(str(downloaded_file), format="audio/mpeg", start_time=0)
 
-                # After preparing the track for download, generate a URL for download
-                # You can host the file on your server or cloud storage
-                download_url = f"https://your-server.com/path/to/{os.path.basename(downloaded_file)}"
-                
                 # Action buttons in columns
                 col1, col2 = st.columns(2)
                 with col1:
@@ -153,10 +149,14 @@ elif st.session_state.current_page == "Play Song":
                         st.success(f"Track saved to: {moved_file}")
                 
                 with col2:
-                    # Generate a clickable link to download the file in the browser
-                    st.markdown(f'<a href="{download_url}" target="_blank" download>⬇ Download Track</a>', unsafe_allow_html=True)
-                
-
+                    # Generate a download button
+                    with open(downloaded_file, "rb") as f:
+                        st.download_button(
+                            label="⬇ Download Track", 
+                            data=f,
+                            file_name=os.path.basename(downloaded_file),
+                            mime="audio/mpeg"
+                        )
 
             except Exception as e:
                 st.error(f"An error occurred: {str(e)}")
