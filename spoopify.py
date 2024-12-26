@@ -59,9 +59,6 @@ if "selected_video" not in st.session_state:
 if "selected_thumbnail" not in st.session_state:
     st.session_state.selected_thumbnail = None
 
-if "selected_title" not in st.session_state:
-    st.session_state.selected_title = None
-
 if "current_page" not in st.session_state:
     st.session_state.current_page = "Home"
 
@@ -116,7 +113,6 @@ if st.session_state.current_page == "Home":
                 if st.button(f"Select '{title}'", key=video_id):
                     st.session_state.selected_video = video_id
                     st.session_state.selected_thumbnail = thumbnail_url
-                    st.session_state.selected_title = title  # Store the title in session state
                     st.info("Video selected! Please go to the Play Song tab.")
 
                     # Automatically navigate to the "Play Song" tab
@@ -133,9 +129,6 @@ elif st.session_state.current_page == "Play Song":
         st.markdown("### Selected Video")
         st.image(st.session_state.selected_thumbnail, width=400)
         video_url = f"https://www.youtube.com/watch?v={st.session_state.selected_video}"
-        
-        # Use the stored title from session state
-        st.markdown(f"**{st.session_state.selected_title}**")
 
         if st.button("Convert Track"):
             try:
