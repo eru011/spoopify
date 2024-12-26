@@ -198,5 +198,3 @@ elif st.session_state.current_page == "Play Song":
 
 # Footer
 st.markdown("---")
-
-can you add that here
