@@ -74,10 +74,11 @@ st.markdown("""
     <style>
         .navbar {
             display: flex;
-            justify-content: space-around;
+            justify-content: center;
             background-color: #f0f0f0;
             padding: 10px;
             border-radius: 10px;
+            gap: 20px; /* Space between buttons */
         }
         .navbar button {
             width: 150px;
@@ -100,21 +101,21 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Horizontal navigation bar
-col1, col2 = st.columns([1, 2])  # Adjust the columns to create spacing
+st.markdown('<div class="navbar">', unsafe_allow_html=True)
 
 # Home Button
-with col1:
-    home_button_class = "active" if st.session_state.current_page == "Home" else "inactive"
-    if st.button("Home", key="home_button", help="Go to Home", on_click=navigate_to, args=("Home",), kwargs={}):
-        st.session_state.current_page = "Home"
-        st.rerun()
+home_button_class = "active" if st.session_state.current_page == "Home" else "inactive"
+if st.button("Home", key="home_button", help="Go to Home", on_click=navigate_to, args=("Home",), kwargs={}):
+    st.session_state.current_page = "Home"
+    st.rerun()
 
 # Play Song Button
-with col2:
-    play_button_class = "active" if st.session_state.current_page == "Play Song" else "inactive"
-    if st.button("Play Song", key="play_button", help="Go to Play Song", on_click=navigate_to, args=("Play Song",), kwargs={}):
-        st.session_state.current_page = "Play Song"
-        st.rerun()
+play_button_class = "active" if st.session_state.current_page == "Play Song" else "inactive"
+if st.button("Play Song", key="play_button", help="Go to Play Song", on_click=navigate_to, args=("Play Song",), kwargs={}):
+    st.session_state.current_page = "Play Song"
+    st.rerun()
+
+st.markdown('</div>', unsafe_allow_html=True)
 
 # Page content based on the current page
 if st.session_state.current_page == "Home":
@@ -177,22 +178,15 @@ elif st.session_state.current_page == "Play Song":
                 st.markdown("### Now Playing")
                 st.audio(str(downloaded_file), format="audio/mpeg", start_time=0)
 
-                # Action buttons in columns
-                col1, col2 = st.columns(2)
-                with col1:
-                    if st.button("Save to Library", key="move_button"):
-                        moved_file = move_file_to_directory(downloaded_file, directory)
-                        st.success(f"Track saved to: {moved_file}")
-
-                with col2:
-                    with open(downloaded_file, "rb") as file:
-                        st.download_button(
-                            label="⬇ Download Track",
-                            data=file,
-                            file_name=os.path.basename(downloaded_file),
-                            mime="audio/mpeg",
-                            key="download_file_button"
-                        )
+                # Action button for downloading the track
+                with open(downloaded_file, "rb") as file:
+                    st.download_button(
+                        label="⬇ Download Track",
+                        data=file,
+                        file_name=os.path.basename(downloaded_file),
+                        mime="audio/mpeg",
+                        key="download_file_button"
+                    )
 
                 # Back button to return to the home page
                 if st.button("Back to Search"):
