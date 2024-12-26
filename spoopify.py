@@ -99,23 +99,27 @@ if st.session_state.current_page == "Home":
     )
 
     if search_query:
-        with st.spinner("Searching for videos..."):
-            results = search_youtube(search_query)
+    with st.spinner("Searching for videos..."):
+        results = search_youtube(search_query)
 
-        if results:
-            st.markdown("### Search Results")
-            for item in results:
-                video_id = item["id"]["videoId"]
-                title = item["snippet"]["title"]
-                thumbnail_url = item["snippet"]["thumbnails"]["high"]["url"]
+    if results:
+        st.markdown("### Search Results")
+        for item in results:
+            video_id = item["id"]["videoId"]
+            title = item["snippet"]["title"]
+            thumbnail_url = item["snippet"]["thumbnails"]["high"]["url"]
 
-                # Create a button for selecting a video
-                if st.button(f"Select '{title}'", key=video_id):
-                    st.session_state.selected_video = video_id
-                    st.session_state.selected_thumbnail = thumbnail_url
-                    st.info("Video selected! Please go to the Play Song tab.")
-        else:
-            st.error("No videos found. Please try a different query.")
+            # Create a button for selecting a video
+            if st.button(f"Select '{title}'", key=video_id):
+                st.session_state.selected_video = video_id
+                st.session_state.selected_thumbnail = thumbnail_url
+                st.info("Video selected! Redirecting to the Play Song tab...")
+
+                # Automatically navigate to the "Play Song" tab
+                navigate_to("Play Song")
+    else:
+        st.error("No videos found. Please try a different query.")
+
 
 elif st.session_state.current_page == "Play Song":
 
