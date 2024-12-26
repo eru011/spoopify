@@ -69,20 +69,32 @@ def navigate_to(page):
 # Main layout 
 st.title("Xen Music")
 
-# Inject custom CSS to increase sidebar size
+# Inject custom CSS to make navigation bar horizontal
 st.markdown("""
     <style>
-        .css-1d391kg {
-            width: 350px;
+        .navbar {
+            display: flex;
+            justify-content: space-around;
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-radius: 10px;
+        }
+        .navbar button {
+            width: 150px;
         }
     </style>
 """, unsafe_allow_html=True)
 
-# Sidebar for navigation
-page = st.sidebar.radio("Select a page:", ["Home", "Play Song"], index=["Home", "Play Song"].index(st.session_state.current_page))
-
-if page != st.session_state.current_page:
-    navigate_to(page)
+# Horizontal navigation bar
+col1, col2 = st.columns([1, 3])  # Adjust the columns to create spacing
+with col1:
+    if st.button("Home"):
+        navigate_to("Home")
+        st.experimental_rerun()
+with col2:
+    if st.button("Play Song"):
+        navigate_to("Play Song")
+        st.experimental_rerun()
 
 if st.session_state.current_page == "Home":
     # Home page for searching and downloading
@@ -96,7 +108,7 @@ if st.session_state.current_page == "Home":
 
     # Sidebar for settings
     default_directory = str(Path.home() / "Downloads")
-    directory = st.sidebar.text_input(
+    directory = st.text_input(
         "Save Directory:", 
         value=default_directory, 
         placeholder="Enter the directory to save the file"
@@ -124,9 +136,8 @@ if st.session_state.current_page == "Home":
                     st.session_state.selected_video = video_id
                     st.session_state.selected_thumbnail = thumbnail_url
                     st.info("Video selected! Please go to the Play Song tab.")
-
                     navigate_to("Play Song")
-                    st.rerun()
+                    st.experimental_rerun()
         else:
             st.error("No videos found. Please try a different query.")
 
@@ -169,7 +180,7 @@ elif st.session_state.current_page == "Play Song":
                 # Back button to return to the home page
                 if st.button("Back to Search"):
                     navigate_to("Home")
-                    st.rerun()
+                    st.experimental_rerun()
 
             except Exception as e:
                 st.error(f"An error occurred: {str(e)}")
