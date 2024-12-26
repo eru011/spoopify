@@ -143,7 +143,7 @@ elif st.session_state.current_page == "Play Song":
 
                 # After preparing the track for download, generate a URL for download
                 # You can host the file on your server or cloud storage
-                download_url = f"https://spupify.streamlit.app//{os.path.basename(downloaded_file)}"
+                download_url = f"https://your-server.com/path/to/{os.path.basename(downloaded_file)}"
                 
                 # Action buttons in columns
                 col1, col2 = st.columns(2)
@@ -154,8 +154,9 @@ elif st.session_state.current_page == "Play Song":
                 
                 with col2:
                     # Generate a clickable link to download the file in the browser
-                    st.markdown(f"[⬇ Download Track]( {download_url} )", unsafe_allow_html=True)
+                    st.markdown(f'<a href="{download_url}" target="_blank" download>⬇ Download Track</a>', unsafe_allow_html=True)
                 
+
 
             except Exception as e:
                 st.error(f"An error occurred: {str(e)}")
