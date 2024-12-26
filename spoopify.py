@@ -69,9 +69,13 @@ def navigate_to(page):
 # Main layout 
 st.title("Xen Music")
 
-# Inject custom CSS to make navigation bar horizontal and highlight active tab
+# Inject custom CSS to hide Streamlit footer and style navigation bar
 st.markdown("""
     <style>
+        /* Hide Streamlit default footer */
+        footer {visibility: hidden;}
+
+        /* Navigation Bar styling */
         .navbar {
             display: flex;
             justify-content: space-around;
@@ -95,6 +99,15 @@ st.markdown("""
         .navbar .inactive {
             background-color: #f0f0f0;
             color: black;
+        }
+
+        /* Custom Footer */
+        .custom-footer {
+            background-color: #f0f0f0;
+            padding: 20px;
+            text-align: center;
+            font-size: 14px;
+            margin-top: 20px;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -196,5 +209,9 @@ elif st.session_state.current_page == "Play Song":
             except Exception as e:
                 st.error(f"An error occurred: {str(e)}")
 
-# Footer
-st.markdown("---")
+# Custom Footer
+st.markdown("""
+    <div class="custom-footer">
+        <p>&copy; 2024 Your Company. All rights reserved.</p>
+    </div>
+""", unsafe_allow_html=True)
