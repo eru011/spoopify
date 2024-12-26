@@ -107,14 +107,14 @@ with col1:
     home_button_class = "active" if st.session_state.current_page == "Home" else "inactive"
     if st.button("Home", key="home_button", help="Go to Home", on_click=navigate_to, args=("Home",), kwargs={}):
         st.session_state.current_page = "Home"
-        st.rerun()
+        st.experimental_rerun()
 
 # Play Song Button
 with col2:
     play_button_class = "active" if st.session_state.current_page == "Play Song" else "inactive"
     if st.button("Play Song", key="play_button", help="Go to Play Song", on_click=navigate_to, args=("Play Song",), kwargs={}):
         st.session_state.current_page = "Play Song"
-        st.rerun()
+        st.experimental_rerun()
 
 # Page content based on the current page
 if st.session_state.current_page == "Home":
@@ -129,7 +129,11 @@ if st.session_state.current_page == "Home":
 
     # Sidebar for settings
     default_directory = str(Path.home() / "Downloads")
-
+    directory = st.text_input(
+        "Save Directory:", 
+        value=default_directory, 
+        placeholder="Enter the directory to save the file"
+    )
 
     # Search input
     search_query = st.text_input(
@@ -154,7 +158,7 @@ if st.session_state.current_page == "Home":
                     st.session_state.selected_thumbnail = thumbnail_url
                     st.info("Video selected! Please go to the Play Song tab.")
                     navigate_to("Play Song")
-                    st.rerun()
+                    st.experimental_rerun()
         else:
             st.error("No videos found. Please try a different query.")
 
@@ -178,20 +182,26 @@ elif st.session_state.current_page == "Play Song":
                 st.audio(str(downloaded_file), format="audio/mpeg", start_time=0)
 
                 # Action buttons in columns
-            
-                with open(downloaded_file, "rb") as file:
-                    st.download_button(
-                        label="⬇ Download Track",
-                        data=file,
-                        file_name=os.path.basename(downloaded_file),
-                        mime="audio/mpeg",
-                        key="download_file_button"
-                    )
+                col1, col2 = st.columns(2)
+                with col1:
+                    if st.button("Save to Library", key="move_button"):
+                        moved_file = move_file_to_directory(downloaded_file, directory)
+                        st.success(f"Track saved to: {moved_file}")
+
+                with col2:
+                    with open(downloaded_file, "rb") as file:
+                        st.download_button(
+                            label="⬇ Download Track",
+                            data=file,
+                            file_name=os.path.basename(downloaded_file),
+                            mime="audio/mpeg",
+                            key="download_file_button"
+                        )
 
                 # Back button to return to the home page
                 if st.button("Back to Search"):
                     navigate_to("Home")
-                    st.rerun()
+                    st.experimental_rerun()
 
             except Exception as e:
                 st.error(f"An error occurred: {str(e)}")
