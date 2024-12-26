@@ -67,7 +67,7 @@ def navigate_to(page):
     st.session_state.current_page = page
 
 # Main layout 
-st.title("YouTube Audio Downloader")
+st.title("Xen Music")
 
 # Sidebar for navigation
 page = st.sidebar.radio("Select a page:", ["Home", "Play Song"], index=["Home", "Play Song"].index(st.session_state.current_page))
@@ -79,7 +79,7 @@ if st.session_state.current_page == "Home":
     # Home page for searching and downloading
     st.markdown(
         """
-        Search for high-quality audio from YouTube videos. 
+        Search for high-quality audio with XEN. 
         Simply type a topic below to get started.
         """
     )
@@ -124,6 +124,7 @@ elif st.session_state.current_page == "Play Song":
         st.markdown("### Selected Video")
         st.image(st.session_state.selected_thumbnail, width=400)
         video_url = f"https://www.youtube.com/watch?v={st.session_state.selected_video}"
+        st.markdown(f"{title}")
 
         if st.button("Convert Track"):
             try:
