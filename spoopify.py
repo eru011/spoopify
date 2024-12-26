@@ -24,7 +24,7 @@ def search_youtube(query, max_results=5):
         results = response.json()
         return results["items"]
     else:
-        st.error("Failed to fetch YouTube results. Please check your API key.")
+        st.error("Failed to fetch results. Please check your API key.")
         return []
 
 def download_video_to_temp(url):
@@ -67,7 +67,16 @@ def navigate_to(page):
     st.session_state.current_page = page
 
 # Main layout 
-st.title("YouTube Audio Downloader")
+st.title("Xen Music")
+
+# Inject custom CSS to increase sidebar size
+st.markdown("""
+    <style>
+        .css-1d391kg {
+            width: 350px;
+        }
+    </style>
+""", unsafe_allow_html=True)
 
 # Sidebar for navigation
 page = st.sidebar.radio("Select a page:", ["Home", "Play Song"], index=["Home", "Play Song"].index(st.session_state.current_page))
@@ -79,7 +88,8 @@ if st.session_state.current_page == "Home":
     # Home page for searching and downloading
     st.markdown(
         """
-        Search for high-quality audio from YouTube videos. 
+        Search for high-quality Music. 
+        ------------------------------
         Simply type a topic below to get started.
         """
     )
@@ -94,7 +104,7 @@ if st.session_state.current_page == "Home":
 
     # Search input
     search_query = st.text_input(
-        "Search YouTube:", 
+        "Search a Song:", 
         placeholder="Type a topic to search for videos (e.g., 'Bini')",
     )
 
@@ -155,6 +165,11 @@ elif st.session_state.current_page == "Play Song":
                             mime="audio/mpeg",
                             key="download_file_button"
                         )
+
+                # Back button to return to the home page
+                if st.button("Back to Search"):
+                    navigate_to("Home")
+                    st.rerun()
 
             except Exception as e:
                 st.error(f"An error occurred: {str(e)}")
