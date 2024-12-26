@@ -69,7 +69,7 @@ def navigate_to(page):
 # Main layout 
 st.title("Xen Music")
 
-# Inject custom CSS to make navigation bar horizontal
+# Inject custom CSS to make navigation bar horizontal and highlight active tab
 st.markdown("""
     <style>
         .navbar {
@@ -81,21 +81,42 @@ st.markdown("""
         }
         .navbar button {
             width: 150px;
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid transparent;
+            cursor: pointer;
+        }
+        .navbar .active {
+            background-color: #4CAF50;
+            color: white;
+            border: 1px solid #4CAF50;
+        }
+        .navbar .inactive {
+            background-color: #f0f0f0;
+            color: black;
         }
     </style>
 """, unsafe_allow_html=True)
 
 # Horizontal navigation bar
 col1, col2 = st.columns([1, 2])  # Adjust the columns to create spacing
-with col1:
-    if st.button("Home"):
-        navigate_to("Home")
-        st.rerun()
-with col2:
-    if st.button("Play Song"):
-        navigate_to("Play Song")
-        st.rerun()
 
+# Home Button
+with col1:
+    home_button_class = "active" if st.session_state.current_page == "Home" else "inactive"
+    if st.button("Home", key="home_button", help="Go to Home", on_click=navigate_to, args=("Home",), kwargs={}):
+        st.session_state.current_page = "Home"
+        st.experimental_rerun()
+
+# Play Song Button
+with col2:
+    play_button_class = "active" if st.session_state.current_page == "Play Song" else "inactive"
+    if st.button("Play Song", key="play_button", help="Go to Play Song", on_click=navigate_to, args=("Play Song",), kwargs={}):
+        st.session_state.current_page = "Play Song"
+        st.experimental_rerun()
+
+# Page content based on the current page
 if st.session_state.current_page == "Home":
     # Home page for searching and downloading
     st.markdown(
@@ -108,11 +129,7 @@ if st.session_state.current_page == "Home":
 
     # Sidebar for settings
     default_directory = str(Path.home() / "Downloads")
-    directory = st.text_input(
-        "Save Directory:", 
-        value=default_directory, 
-        placeholder="Enter the directory to save the file"
-    )
+
 
     # Search input
     search_query = st.text_input(
@@ -137,7 +154,7 @@ if st.session_state.current_page == "Home":
                     st.session_state.selected_thumbnail = thumbnail_url
                     st.info("Video selected! Please go to the Play Song tab.")
                     navigate_to("Play Song")
-                    st.rerun()
+                    st.experimental_rerun()
         else:
             st.error("No videos found. Please try a different query.")
 
@@ -180,7 +197,7 @@ elif st.session_state.current_page == "Play Song":
                 # Back button to return to the home page
                 if st.button("Back to Search"):
                     navigate_to("Home")
-                    st.rerun()
+                    st.experimental_rerun()
 
             except Exception as e:
                 st.error(f"An error occurred: {str(e)}")
