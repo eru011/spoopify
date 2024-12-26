@@ -5,7 +5,6 @@ from pathlib import Path
 import tempfile
 import shutil
 import requests
-import base64
 
 # Load YouTube API key from Streamlit secrets
 YOUTUBE_API_KEY = st.secrets["youtube"]["api_key"]
@@ -68,7 +67,7 @@ def navigate_to(page):
     st.session_state.current_page = page
 
 # Main layout 
-st.title("Xen Music")
+st.title("YouTube Audio Downloader")
 
 # Sidebar for navigation
 page = st.sidebar.radio("Select a page:", ["Home", "Play Song"], index=["Home", "Play Song"].index(st.session_state.current_page))
@@ -80,7 +79,7 @@ if st.session_state.current_page == "Home":
     # Home page for searching and downloading
     st.markdown(
         """
-        Search for high-quality audio with XEN. 
+        Search for high-quality audio from YouTube videos. 
         Simply type a topic below to get started.
         """
     )
@@ -116,10 +115,8 @@ if st.session_state.current_page == "Home":
                     st.session_state.selected_thumbnail = thumbnail_url
                     st.info("Video selected! Please go to the Play Song tab.")
 
-                    # Automatically navigate to the "Play Song" tab
                     navigate_to("Play Song")
                     st.rerun()
-
         else:
             st.error("No videos found. Please try a different query.")
 
@@ -148,15 +145,16 @@ elif st.session_state.current_page == "Play Song":
                     if st.button("Save to Library", key="move_button"):
                         moved_file = move_file_to_directory(downloaded_file, directory)
                         st.success(f"Track saved to: {moved_file}")
-                
-                with col2:
-                    # Generate base64 encoded data URL for the downloaded file
-                    with open(downloaded_file, "rb") as file:
-                        encoded_file = base64.b64encode(file.read()).decode("utf-8")
-                        download_url = f"data:audio/mpeg;base64,{encoded_file}"
 
-                    # Provide a download link that opens in a new browser tab
-                    st.markdown(f'<a href="{download_url}" target="_blank" download="{os.path.basename(downloaded_file)}">⬇ Download Track</a>', unsafe_allow_html=True)
+                with col2:
+                    with open(downloaded_file, "rb") as file:
+                        st.download_button(
+                            label="⬇ Download Track",
+                            data=file,
+                            file_name=os.path.basename(downloaded_file),
+                            mime="audio/mpeg",
+                            key="download_file_button"
+                        )
 
             except Exception as e:
                 st.error(f"An error occurred: {str(e)}")
