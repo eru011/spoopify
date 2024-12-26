@@ -117,6 +117,7 @@ if st.session_state.current_page == "Home":
 
                     # Automatically navigate to the "Play Song" tab
                     navigate_to("Play Song")
+                    st.experimental_rerun()
 
         else:
             st.error("No videos found. Please try a different query.")
