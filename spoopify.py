@@ -1,200 +1,172 @@
 import yt_dlp as ytdl
-import os
 import streamlit as st
 from pathlib import Path
 import tempfile
-import shutil
 import requests
 
-# Load YouTube API key from Streamlit secrets
-YOUTUBE_API_KEY = st.secrets["youtube"]["api_key"]
-
-def search_youtube(query, max_results=5):
-    """Search for YouTube videos based on a query and return the results."""
-    url = f"https://www.googleapis.com/youtube/v3/search"
-    params = {
-        "part": "snippet",
-        "q": query,
-        "type": "video",
-        "maxResults": max_results,
-        "key": YOUTUBE_API_KEY,
+# Initialize session state
+if 'state' not in st.session_state:
+    st.session_state.state = {
+        'selected_video': None,
+        'selected_thumbnail': None,
+        'selected_title': None,
+        'downloaded_file': None,
+        'is_converted': False,
+        'current_page': 'Home'
     }
-    response = requests.get(url, params=params)
-    if response.status_code == 200:
-        results = response.json()
-        return results["items"]
-    else:
-        st.error("Failed to fetch results. Please check your API key.")
+
+def search_youtube(query):
+    """Search for YouTube videos."""
+    try:
+        url = "https://www.googleapis.com/youtube/v3/search"
+        params = {
+            "part": "snippet,id",
+            "q": query,
+            "type": "video",
+            "maxResults": 10,
+            "key": st.secrets["youtube"]["api_key"]
+        }
+        
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        data = response.json()
+        
+        if 'items' not in data:
+            raise ValueError("Invalid API response")
+            
+        return [
+            {
+                'id': item['id']['videoId'],
+                'title': item['snippet']['title'],
+                'thumbnail': item['snippet']['thumbnails']['high']['url']
+            }
+            for item in data['items']
+            if all(k in item for k in ['id', 'snippet'])
+        ]
+    except Exception as e:
+        st.error(f"Search failed: {str(e)}")
         return []
 
-def download_video_to_temp(url):
-    """Download the best audio to a temporary directory and return the file path."""
-    temp_dir = tempfile.mkdtemp()
-    output_file = os.path.join(temp_dir, '%(title)s.%(ext)s')
+def download_audio(url):
+    """Download and convert video to audio."""
+    try:
+        temp_dir = tempfile.mkdtemp()
+        output_template = str(Path(temp_dir) / '%(title)s.%(ext)s')
+        
+        ydl_opts = {
+            'format': 'bestaudio/best',
+            'outtmpl': output_template,
+            'postprocessors': [{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'mp3',
+                'preferredquality': '192',
+            }],
+            'quiet': True,
+            'no_warnings': True,
+            'extract_audio': True,
+            'audio_format': 'mp3',
+            'audio_quality': '192K',
+            'nocheckcertificate': True,
+            'geo_bypass': True,
+            'http_headers': {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            }
+        }
+        
+        with ytdl.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([url])
+        
+        # Find the downloaded file
+        audio_file = next(Path(temp_dir).glob('*.mp3'), None)
+        if not audio_file:
+            raise FileNotFoundError("No audio file was created")
+            
+        return audio_file
+    except Exception as e:
+        st.error(f"Download failed: {str(e)}")
+        return None
+
+def render_home():
+    """Render home page with search functionality."""
+    st.markdown("### Search for Music")
+    query = st.text_input("Search:", placeholder="Enter song name or artist")
     
-    ydl_opts = {
-        'format': 'bestaudio/best',
-        'outtmpl': output_file,
-        'quiet': True,
-    }
+    if query:
+        with st.spinner("Searching..."):
+            results = search_youtube(query)
+            
+        if results:
+            for item in results:
+                col1, col2 = st.columns([3, 1])
+                with col1:
+                    st.write(f"**{item['title']}**")
+                with col2:
+                    if st.button("Select", key=item['id']):
+                        try:
+                            st.session_state.state.update({
+                                'selected_video': item['id'],
+                                'selected_thumbnail': item['thumbnail'],
+                                'selected_title': item['title'],
+                                'is_converted': False,
+                                'current_page': 'Play'
+                            })
+                            st.query_params["tab"] = "Player"
+                        except Exception as e:
+                            st.error(f"Error selecting track: {str(e)}")
+                        st.rerun()
+        else:
+            st.warning("No results found")
+
+def render_player():
+    """Render music player page."""
+    state = st.session_state.state
+    if not state['selected_video']:
+        st.warning("No track selected")
+        return
+
+    st.image(state['selected_thumbnail'], width=400)
+    st.markdown(f"### {state['selected_title']}")
     
-    with ytdl.YoutubeDL(ydl_opts) as ydl:
-        ydl.download([url])
+    if not state['is_converted']:
+        with st.spinner("Converting audio..."):
+            video_url = f"https://www.youtube.com/watch?v={state['selected_video']}"
+            audio_file = download_audio(video_url)
+            
+            if audio_file:
+                state.update({
+                    'downloaded_file': audio_file,
+                    'is_converted': True
+                })
+                st.success("Ready to play!")
+                st.rerun()
     
-    downloaded_file = next(Path(temp_dir).glob("*"))
-    return downloaded_file
+    if state['is_converted'] and state['downloaded_file']:
+        st.audio(str(state['downloaded_file']), format='audio/mp3')
+        
+        with open(state['downloaded_file'], 'rb') as f:
+            st.download_button(
+                "⬇ Download",
+                f,
+                file_name=state['downloaded_file'].name,
+                mime='audio/mp3'
+            )
 
-def move_file_to_directory(file_path, destination_directory):
-    """Move a file to a specified directory."""
-    if not os.path.exists(destination_directory):
-        os.makedirs(destination_directory)
-    destination_path = os.path.join(destination_directory, os.path.basename(file_path))
-    shutil.move(file_path, destination_path)
-    return destination_path
-
-# Initialize session state
-if "selected_video" not in st.session_state:
-    st.session_state.selected_video = None
-
-if "selected_thumbnail" not in st.session_state:
-    st.session_state.selected_thumbnail = None
-
-if "current_page" not in st.session_state:
-    st.session_state.current_page = "Home"
-
-# Navigation function
-def navigate_to(page):
-    st.session_state.current_page = page
-
-# Main layout 
+# Main UI
 st.title("Xen Music")
 
-# Inject custom CSS to make navigation bar horizontal and highlight active tab
-st.markdown("""
-    <style>
-        .navbar {
-            display: flex;
-            justify-content: space-around;
-            background-color: #f0f0f0;
-            padding: 10px;
-            border-radius: 10px;
-        }
-        .navbar button {
-            width: 150px;
-            padding: 10px;
-            font-size: 16px;
-            border-radius: 5px;
-            border: 1px solid transparent;
-            cursor: pointer;
-        }
-        .navbar .active {
-            background-color: #4CAF50;
-            color: white;
-            border: 1px solid #4CAF50;
-        }
-        .navbar .inactive {
-            background-color: #f0f0f0;
-            color: black;
-        }
-    </style>
-""", unsafe_allow_html=True)
+# Navigation with error handling
+try:
+    current_tab = st.query_params.get("tab", "Search")
+except Exception:
+    current_tab = "Search"
+    
+tab_index = 1 if current_tab == "Player" else 0
 
-# Horizontal navigation bar
-col1, col2 = st.columns([1, 2])  # Adjust the columns to create spacing
+# Create tabs with the selected index
+tabs = st.tabs(["Search", "Player"])
 
-# Home Button
-with col1:
-    home_button_class = "active" if st.session_state.current_page == "Home" else "inactive"
-    if st.button("Home", key="home_button", help="Go to Home", on_click=navigate_to, args=("Home",), kwargs={}):
-        st.session_state.current_page = "Home"
-        st.rerun()
-
-# Play Song Button
-with col2:
-    play_button_class = "active" if st.session_state.current_page == "Play Song" else "inactive"
-    if st.button("Play Song", key="play_button", help="Go to Play Song", on_click=navigate_to, args=("Play Song",), kwargs={}):
-        st.session_state.current_page = "Play Song"
-        st.rerun()
-
-# Page content based on the current page
-if st.session_state.current_page == "Home":
-    # Home page for searching and downloading
-    st.markdown(
-        """
-        Search for high-quality Music. 
-        ------------------------------
-        Simply type a topic below to get started.
-        """
-    )
-
-    # Sidebar for settings
-    default_directory = str(Path.home() / "Downloads")
-
-
-    # Search input
-    search_query = st.text_input(
-        "Search a Song:", 
-        placeholder="Type a topic to search for videos (e.g., 'Bini')",
-    )
-
-    if search_query:
-        with st.spinner("Searching for videos..."):
-            results = search_youtube(search_query)
-
-        if results:
-            st.markdown("### Search Results")
-            for item in results:
-                video_id = item["id"]["videoId"]
-                title = item["snippet"]["title"]
-                thumbnail_url = item["snippet"]["thumbnails"]["high"]["url"]
-
-                # Create a button for selecting a video
-                if st.button(f"Select '{title}'", key=video_id):
-                    st.session_state.selected_video = video_id
-                    st.session_state.selected_thumbnail = thumbnail_url
-                    st.info("Video selected! Please go to the Play Song tab.")
-                    navigate_to("Play Song")
-                    st.rerun()
-        else:
-            st.error("No videos found. Please try a different query.")
-
-elif st.session_state.current_page == "Play Song":
-
-    # Show thumbnail and download options for the selected video
-    if st.session_state.selected_video:
-        st.markdown("### Selected Video")
-        st.image(st.session_state.selected_thumbnail, width=400)
-        video_url = f"https://www.youtube.com/watch?v={st.session_state.selected_video}"
-
-        if st.button("Convert Track"):
-            try:
-                with st.spinner("Preparing your track..."):
-                    downloaded_file = download_video_to_temp(video_url)
-                
-                st.success("Track ready! Choose your next move.")
-                
-                # Audio player
-                st.markdown("### Now Playing")
-                st.audio(str(downloaded_file), format="audio/mpeg", start_time=0)
-
-                # Action buttons in columns
-            
-                with open(downloaded_file, "rb") as file:
-                    st.download_button(
-                        label="⬇ Download Track",
-                        data=file,
-                        file_name=os.path.basename(downloaded_file),
-                        mime="audio/mpeg",
-                        key="download_file_button"
-                    )
-
-                # Back button to return to the home page
-                if st.button("Back to Search"):
-                    navigate_to("Home")
-                    st.rerun()
-
-            except Exception as e:
-                st.error(f"An error occurred: {str(e)}")
-
-# Footer
-st.markdown("---")
+with tabs[0]:
+    render_home()
+        
+with tabs[1]:
+    render_player()
